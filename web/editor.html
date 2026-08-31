@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenFont Studio - Piksel & Vektörel Font Editörü</title>
+  <style>
+    :root {
+      --bg: #09090b;
+      --panel: #121215;
+      --panel-border: #27272a;
+      --accent: #22c55e;
+      --accent-hover: #16a34a;
+      --accent-subtle: rgba(34, 197, 94, 0.15);
+      --text: #f4f4f5;
+      --text-muted: #a1a1aa;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --blue: #3b82f6;
+      --purple: #a855f7;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.4;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* HEADER */
+    header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--panel-border);
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      z-index: 10;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-logo {
+      width: 28px;
+      height: 28px;
+      background: var(--accent);
+      color: #000;
+      font-weight: 900;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    .brand h1 { font-size: 1.15rem; font-weight: 700; }
+    .brand span { font-size: 0.8rem; color: var(--text-muted); }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.88rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn-secondary { background: #27272a; color: var(--text); }
+    .btn-secondary:hover { background: #3f3f46; }
+    .btn-danger { background: #7f1d1d; color: #fca5a5; }
+    .btn-danger:hover { background: var(--danger); color: #fff; }
+    .badge {
+      background: #27272a;
+      color: var(--accent);
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    /* MAIN LAYOUT */
+    .app-body {
+      display: grid;
+      grid-template-columns: 280px 1fr 340px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* SIDEBAR (CHARACTERS) */
+    .sidebar {
+      background: var(--panel);
+      border-right: 1px solid var(--panel-border);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+    .sidebar-header {
+      padding: 12px;
+      border-bottom: 1px solid var(--panel-border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .search-box {
+      width: 100%;
+      background: #000;
+      border: 1px solid var(--panel-border);
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      outline: none;
+    }
+    .search-box:focus { border-color: var(--accent); }
+    .category-tabs {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+    .category-tab {
+      background: transparent;
+      border: 1px solid var(--panel-border);
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .category-tab.active {
+      background: var(--accent-subtle);
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .char-grid {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      align-content: start;
+    }
+    .char-card {
+      background: #0b0b0e;
+      border: 1px solid var(--panel-border);
+      border-radius: 6px;
+      padding: 6px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.12s;
+      min-height: 54px;
+      position: relative;
+    }
+    .char-card:hover { border-color: var(--text-muted); background: #18181b; }
+    .char-card.active {
+      background: var(--accent-subtle);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+    .char-card .glyph-symbol {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.1;
+    }
+    .char-card .glyph-code {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .char-card .glyph-mode-tag {
+      position: absolute;
+      top: 2px;
+      right: 3px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #3b82f6;
+    }
+
+    /* CENTER CANVAS AREA */
+    .canvas-area {
+      display: flex;
+      flex-direction: column;
+      background: #09090b;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .canvas-topbar {
+      background: #141418;
+      border-bottom: 1px solid var(--panel-border);
+      padding: 8px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .mode-pills {
+      display: flex;
+      background: #000;
+      border: 1px solid var(--panel-border);
+      border-radius: 6px;
+      padding: 2px;
+    }
+    .mode-pill {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 5px 12px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .mode-pill.active {
+      background: var(--panel);
+      color: var(--accent);
+    }
+
+    .tools-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .tool-btn {
+      background: #1e1e24;
+      border: 1px solid var(--panel-border);
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .tool-btn:hover { background: #27272a; }
+    .tool-btn.active {
+      background: var(--accent-subtle);
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .res-select {
+      background: #000;
+      color: var(--accent);
+      border: 1px solid var(--panel-border);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* GHOST GUIDE TOOLBAR CONTROLS */
+    .ghost-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #000;
+      border: 1px solid var(--panel-border);
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    .canvas-viewport {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background: radial-gradient(circle at center, #18181c 0%, #09090b 100%);
+      overflow: auto;
+      padding: 20px;
+    }
+    #mainCanvas {
+      background: #0b0b0e;
+      border: 1px solid var(--panel-border);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      border-radius: 8px;
+      cursor: crosshair;
+    }
+
+    .canvas-footer {
+      background: #121215;
+      border-top: 1px solid var(--panel-border);
+      padding: 6px 16px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* RIGHT PANEL (METRICS & LIVE TEST) */
+    .right-panel {
+      background: var(--panel);
+      border-left: 1px solid var(--panel-border);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow-y: auto;
+      padding: 16px;
+      gap: 16px;
+    }
+    .section-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .char-info-card {
+      background: #09090b;
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 60px 1fr;
+      gap: 12px;
+      align-items: center;
+    }
+    .char-big-symbol {
+      width: 60px;
+      height: 60px;
+      background: #18181b;
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .char-meta-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.82rem;
+    }
+    .input-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 8px;
+    }
+    .input-row label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+    .input-row input, .input-row select {
+      background: #000;
+      border: 1px solid var(--panel-border);
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      outline: none;
+    }
+    .input-row input:focus { border-color: var(--accent); }
+
+    .advance-presets {
+      display: flex;
+      gap: 4px;
+      margin-top: 4px;
+    }
+    .preset-chip {
+      background: #1e1e24;
+      border: 1px solid var(--panel-border);
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .preset-chip:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* LIVE TYPOGRAPHY PREVIEW */
+    .preview-box-container {
+      background: #09090b;
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .preview-sample-pills {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .sample-pill {
+      background: #18181b;
+      border: 1px solid var(--panel-border);
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      padding: 3px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .sample-pill:hover { color: var(--text); border-color: var(--text-muted); }
+    #previewInput {
+      width: 100%;
+      background: #000;
+      border: 1px solid var(--panel-border);
+      color: var(--text);
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      resize: vertical;
+      min-height: 50px;
+    }
+    .live-render-view {
+      background: #000;
+      border: 1px dashed var(--panel-border);
+      border-radius: 6px;
+      padding: 14px;
+      min-height: 110px;
+      max-height: 220px;
+      overflow-y: auto;
+      font-size: 28px;
+      line-height: 1.3;
+      color: var(--accent);
+      word-break: break-word;
+      font-family: 'OpenPixelFont', system-ui, sans-serif;
+    }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    .modal-card {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 24px;
+      width: 360px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    @font-face {
+      font-family: 'OpenPixelFont';
+      src: url('/output/OpenPixelFont-Regular.ttf') format('truetype');
+      font-display: swap;
+    }
+
+    /* CUSTOM SCROLLBAR */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">F</div>
+      <div>
+        <h1>OpenFont Studio</h1>
+        <span>Türkçe & Sembol Font Editörü</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span id="glyphCountBadge" class="badge">113 Karakter</span>
+      <button class="btn btn-danger" title="Tüm harflerdeki çizimleri temizler ve boş tuval bırakır" onclick="clearAllGlyphsDrawings()">🗑️ Tüm Çizimleri Temizle</button>
+      <button class="btn btn-secondary" onclick="saveAllGlyphs()">💾 JSON Kaydet</button>
+      <button class="btn" onclick="buildAndDownloadTtf()">⚡ TTF Derle & İndir</button>
+    </div>
+  </header>
+
+  <!-- APP BODY -->
+  <div class="app-body">
+
+    <!-- LEFT SIDEBAR: CHARACTER PALETTE -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <input type="text" id="searchInput" class="search-box" placeholder="Karakter ara (örn: ç, ğ, ₺, 5, ?)..." oninput="filterGlyphs()">
+        <div class="category-tabs">
+          <button class="category-tab active" data-cat="all" onclick="setCategory('all')">Tümü</button>
+          <button class="category-tab" data-cat="turkish_upper" onclick="setCategory('turkish_upper')">🇹🇷 Büyük</button>
+          <button class="category-tab" data-cat="turkish_lower" onclick="setCategory('turkish_lower')">🇹🇷 Küçük</button>
+          <button class="category-tab" data-cat="digit" onclick="setCategory('digit')">🔢 Rakam</button>
+          <button class="category-tab" data-cat="symbol" onclick="setCategory('symbol')">🔣 Sembol</button>
+          <button class="category-tab" data-cat="currency" onclick="setCategory('currency')">💰 Para</button>
+        </div>
+      </div>
+      <div id="charGrid" class="char-grid"></div>
+      <div style="padding: 10px; border-top: 1px solid var(--panel-border); display:flex; flex-direction:column; gap:6px;">
+        <button class="btn btn-secondary" style="width:100%; justify-content:center; font-size:0.8rem;" onclick="openAddGlyphModal()">+ Yeni Karakter Ekle</button>
+      </div>
+    </div>
+
+    <!-- CENTER: DRAWING BOARD (ÇİZİM TAHTASI) -->
+    <div class="canvas-area">
+      <div class="canvas-topbar">
+        <!-- MODE SWITCHER -->
+        <div class="mode-pills">
+          <button id="modeVectorBtn" class="mode-pill active" onclick="setEditMode('vector')">🎨 Vektör Çizim</button>
+          <button id="modeGridBtn" class="mode-pill" onclick="setEditMode('grid')">▦ Piksel Grid</button>
+        </div>
+
+        <!-- VECTOR TOOLS -->
+        <div id="vectorTools" class="tools-bar">
+          <button class="tool-btn active" data-tool="brush" onclick="setVectorTool('brush')">🖌️ Kalem</button>
+          <button class="tool-btn" data-tool="eraser" onclick="setVectorTool('eraser')">🧹 Silgi</button>
+          <span style="font-size:0.75rem; color:var(--text-muted); margin-left:4px;">Kalınlık:</span>
+          <input type="range" id="brushWidthSlider" min="20" max="160" value="60" style="width:65px; cursor:pointer;" oninput="updateBrushWidth(this.value)">
+          <span id="brushWidthLabel" style="font-size:0.75rem; color:var(--accent); min-width:24px;">60</span>
+        </div>
+
+        <!-- GRID TOOLS -->
+        <div id="gridTools" class="tools-bar" style="display:none;">
+          <span style="font-size:0.75rem; color:var(--text-muted);">Çözünürlük:</span>
+          <select id="gridResSelect" class="res-select" onchange="changeGridResolution(this.value)">
+            <option value="8">8×8</option>
+            <option value="12">12×12</option>
+            <option value="16">16×16</option>
+            <option value="24">24×24</option>
+            <option value="32" selected>32×32</option>
+            <option value="48">48×48</option>
+            <option value="64">64×64</option>
+          </select>
+          <button class="tool-btn active" data-gridtool="pen" onclick="setGridTool('pen')">✏️ Çiz</button>
+          <button class="tool-btn" data-gridtool="eraser" onclick="setGridTool('eraser')">🧹 Sil</button>
+          <button class="tool-btn" data-gridtool="bucket" onclick="setGridTool('bucket')">🪣 Doldur</button>
+          <button class="tool-btn" onclick="shiftGrid(0, -1)">⬆️</button>
+          <button class="tool-btn" onclick="shiftGrid(0, 1)">⬇️</button>
+          <button class="tool-btn" onclick="shiftGrid(-1, 0)">⬅️</button>
+          <button class="tool-btn" onclick="shiftGrid(1, 0)">➡️</button>
+        </div>
+
+        <!-- GHOST GUIDE TEMPLATE CONTROLS -->
+        <div class="ghost-controls">
+          <button id="ghostToggleBtn" class="tool-btn active" style="font-size:0.75rem; padding:4px 8px;" onclick="toggleGhostGuide()">
+            👻 Şeffaf Rehber: AÇIK
+          </button>
+          <span style="font-size:0.72rem; color:var(--text-muted);">Şeffaflık:</span>
+          <input type="range" id="ghostOpacitySlider" min="5" max="60" value="18" style="width:55px; cursor:pointer;" oninput="updateGhostOpacity(this.value)">
+          <span id="ghostOpacityVal" style="font-size:0.72rem; color:#93c5fd; min-width:26px;">%18</span>
+        </div>
+
+        <!-- GLOBAL UTILITY BUTTONS -->
+        <div class="tools-bar">
+          <button class="tool-btn" title="Yalnızca seçili harfi temizler" onclick="clearCanvasContent()">🗑️ Bu Harfi Sil</button>
+          <button class="tool-btn" onclick="undo()">↩️ Geri</button>
+        </div>
+      </div>
+
+      <!-- MAIN CANVAS VIEWPORT -->
+      <div class="canvas-viewport" id="canvasContainer">
+        <canvas id="mainCanvas" width="600" height="600"></canvas>
+      </div>
+
+      <!-- CANVAS FOOTER STATUS -->
+      <div class="canvas-footer">
+        <span id="canvasStatusText">Karakter seçildi: a (U+0061)</span>
+        <span id="canvasCoords">X: 0, Y: 0</span>
+      </div>
+    </div>
+
+    <!-- RIGHT SIDEBAR: METRICS & LIVE PREVIEW -->
+    <div class="right-panel">
+      <!-- CURRENT GLYPH CARD -->
+      <div>
+        <div class="section-title">Karakter Bilgisi</div>
+        <div class="char-info-card">
+          <div id="charBigPreview" class="char-big-symbol">a</div>
+          <div class="char-meta-fields">
+            <div><strong id="charNameDisplay">a</strong></div>
+            <div id="charUnicodeDisplay" style="color:var(--text-muted);">Unicode: U+0061 (97)</div>
+            <div id="charCategoryDisplay" style="color:var(--accent); font-size:0.75rem;">Türkçe Küçük Harf</div>
+          </div>
+        </div>
+
+        <div class="input-row">
+          <label>Karakter Genişliği (Advance Width: <span id="advanceValLabel">600</span>)</label>
+          <input type="range" id="advanceSlider" min="200" max="1100" step="20" value="600" oninput="updateAdvanceWidth(this.value)">
+          <div class="advance-presets">
+            <span class="preset-chip" onclick="updateAdvanceWidth(260)">260 (Dar)</span>
+            <span class="preset-chip" onclick="updateAdvanceWidth(420)">420</span>
+            <span class="preset-chip" onclick="updateAdvanceWidth(600)">600 (Normal)</span>
+            <span class="preset-chip" onclick="updateAdvanceWidth(700)">700 (Geniş)</span>
+            <span class="preset-chip" onclick="updateAdvanceWidth(880)">880</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- INTER-MODE CONVERTER -->
+      <div>
+        <div class="section-title">Dönüştürme Araçları</div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <button class="btn btn-secondary" style="font-size:0.78rem; justify-content:center;" onclick="convertGridToVector()">📐 Piksel Grid'i Vektöre Çevir</button>
+          <button class="btn btn-secondary" style="font-size:0.78rem; justify-content:center;" onclick="convertVectorToGrid()">▦ Vektörü Grid'e Rasterize Et</button>
+        </div>
+      </div>
+
+      <!-- LIVE TYPOGRAPHY PREVIEW -->
+      <div style="flex:1; display:flex; flex-direction:column; min-height:260px;">
+        <div class="section-title">
+          <span>Canlı Tipografi Testi</span>
+          <span style="font-size:0.7rem; color:var(--accent); cursor:pointer;" onclick="refreshPreviewFont()">🔄 Yenile</span>
+        </div>
+        <div class="preview-box-container">
+          <div class="preview-sample-pills">
+            <span class="sample-pill" onclick="setPreviewText('Pijamalı hasta yağız şoföre çabucak güvendi.')">🇹🇷 Pangram 1</span>
+            <span class="sample-pill" onclick="setPreviewText('Vakfın çoğu bu lüzumsuz şekilleri görmezden gelemez.')">🇹🇷 Pangram 2</span>
+            <span class="sample-pill" onclick="setPreviewText('İĞÇÖŞÜ ığçöşü 0123456789')">🇹🇷 Türkçe Set</span>
+            <span class="sample-pill" onclick="setPreviewText('₺ 1.250,50 TL (Euro: € 50 | USD: $ 60) !?%')">💰 Semboller</span>
+          </div>
+          <textarea id="previewInput" oninput="updateLivePreview()">Pijamalı hasta yağız şoföre çabucak güvendi. İĞÇÖŞÜ ığçöşü ₺ 1234567890 !?</textarea>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <label style="font-size:0.75rem; color:var(--text-muted);">Yazı Boyutu (<span id="fontSizeVal">28px</span>):</label>
+            <input type="range" min="14" max="64" value="28" style="width:100px; cursor:pointer;" oninput="updateFontSize(this.value)">
+          </div>
+          <div id="livePreviewOutput" class="live-render-view"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD GLYPH MODAL -->
+  <div id="addModal" class="modal-overlay">
+    <div class="modal-card">
+      <h3 style="font-size:1.05rem;">Yeni Karakter Ekle</h3>
+      <div class="input-row">
+        <label>Karakter / Harf</label>
+        <input type="text" id="newCharInput" maxlength="2" placeholder="Örn: ©, ★, Ğ" oninput="onNewCharInput(this.value)">
+      </div>
+      <div class="input-row">
+        <label>Unicode Kod Noktası (Hex)</label>
+        <input type="text" id="newHexInput" placeholder="Örn: 00A9">
+      </div>
+      <div class="input-row">
+        <label>Glyph Adı</label>
+        <input type="text" id="newNameInput" placeholder="Örn: copyright">
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+        <button class="btn btn-secondary" onclick="closeAddGlyphModal()">İptal</button>
+        <button class="btn" onclick="confirmAddGlyph()">Ekle</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT LOGIC -->
+  <script>
+    let glyphs = {};
+    let ghostTemplates = {}; // Visual-only reference background guide layer
+    let showGhostGuide = true;
+    let ghostOpacity = 0.18; // default 18% opacity
+
+    let currentKey = "a";
+    let activeCategory = "all";
+    let editMode = "vector";
+    let vectorTool = "brush";
+    let gridTool = "pen";
+    let brushWidth = 60;
+    let gridResolution = 32;
+    let isDrawing = false;
+    let currentStroke = null;
+    let undoStack = [];
+
+    const CANVAS_SIZE = 600;
+    const UPM = 1000;
+    const ASCENDER = 800;
+    const CAP_HEIGHT = 700;
+    const X_HEIGHT = 500;
+    const BASELINE = 0;
+    const DESCENDER = -200;
+
+    const canvas = document.getElementById("mainCanvas");
+    const ctx = canvas.getContext("2d");
+
+    async function init() {
+      try {
+        const res = await fetch("/api/glyphs?t=" + Date.now(), { cache: "no-store" });
+        glyphs = await res.json();
+      } catch (err) {
+        console.error("Glyphs could not be loaded:", err);
+      }
+
+      // Load background ghost guide templates
+      try {
+        const gRes = await fetch("/web/ghost_templates.json?t=" + Date.now(), { cache: "no-store" });
+        ghostTemplates = await gRes.json();
+      } catch (err) {
+        console.warn("Ghost templates could not be loaded:", err);
+      }
+
+      document.getElementById("glyphCountBadge").textContent = Object.keys(glyphs).length + " Karakter";
+
+      if (glyphs["a"]) currentKey = "a";
+      else if (glyphs["A"]) currentKey = "A";
+      else currentKey = Object.keys(glyphs)[0] || "a";
+
+      renderCharGrid();
+      selectGlyph(currentKey);
+      setupCanvasEvents();
+      updateLivePreview();
+      refreshPreviewFont();
+    }
+
+    // CLEAR ALL GLYPH DRAWINGS
+    async function clearAllGlyphsDrawings() {
+      const msg = "⚠️ DİKKAT: Tüm 113 karakterdeki çizimleri tamamen silmek ve sıfırdan boş tuvalle başlamak istiyor musunuz?\n\n(Şeffaf rehber şablon arkaplanda kalmaya devam edecektir.)";
+      if (!confirm(msg)) return;
+
+      try {
+        const res = await fetch("/api/clear_all", { method: "POST" });
+        const data = await res.json();
+        glyphs = data.glyphs;
+
+        document.getElementById("glyphCountBadge").textContent = Object.keys(glyphs).length + " Karakter";
+        renderCharGrid();
+        selectGlyph(currentKey);
+        drawCanvas();
+        updateLivePreview();
+        await refreshPreviewFont();
+        alert("✓ Tüm karakterlerin çizimleri başarıyla temizlendi! Şeffaf rehber eşliğinde sıfırdan çizime başlayabilirsiniz.");
+      } catch (err) {
+        // Fallback in memory
+        Object.keys(glyphs).forEach(k => {
+          glyphs[k].contours = [];
+          glyphs[k].strokes = [];
+          const rows = glyphs[k].gridRows || 32;
+          const cols = glyphs[k].gridCols || 32;
+          glyphs[k].grid = Array(rows).fill(" ".repeat(cols));
+        });
+        await saveAllGlyphs(false);
+        drawCanvas();
+        renderCharGrid();
+        updateLivePreview();
+        alert("✓ Tüm çizimler temizlendi!");
+      }
+    }
+
+    // GHOST GUIDE CONTROLS
+    function toggleGhostGuide() {
+      showGhostGuide = !showGhostGuide;
+      const btn = document.getElementById("ghostToggleBtn");
+      btn.textContent = showGhostGuide ? "👻 Şeffaf Rehber: AÇIK" : "👻 Şeffaf Rehber: KAPALI";
+      btn.classList.toggle("active", showGhostGuide);
+      drawCanvas();
+    }
+
+    function updateGhostOpacity(val) {
+      ghostOpacity = parseInt(val) / 100.0;
+      document.getElementById("ghostOpacityVal").textContent = `%${val}`;
+      drawCanvas();
+    }
+
+    function setCategory(cat) {
+      activeCategory = cat;
+      document.querySelectorAll(".category-tab").forEach(tab => {
+        tab.classList.toggle("active", tab.dataset.cat === cat);
+      });
+      renderCharGrid();
+    }
+
+    function filterGlyphs() {
+      renderCharGrid();
+    }
+
+    function renderCharGrid() {
+      const gridEl = document.getElementById("charGrid");
+      const search = document.getElementById("searchInput").value.trim().toLowerCase();
+      gridEl.innerHTML = "";
+
+      const keys = Object.keys(glyphs);
+
+      keys.forEach(k => {
+        const g = glyphs[k];
+        if (!g) return;
+
+        if (activeCategory !== "all" && g.category !== activeCategory) return;
+
+        if (search) {
+          const ch = (g.char || "").toLowerCase();
+          const nm = (g.name || "").toLowerCase();
+          const hex = (g.unicode ? g.unicode.toString(16) : "").toLowerCase();
+          if (!ch.includes(search) && !nm.includes(search) && !hex.includes(search)) return;
+        }
+
+        const card = document.createElement("div");
+        card.className = "char-card" + (k === currentKey ? " active" : "");
+        card.onclick = () => selectGlyph(k);
+
+        const hexCode = g.unicode ? "U+" + g.unicode.toString(16).toUpperCase().padStart(4, "0") : g.name;
+        const displayChar = g.char || g.name;
+
+        card.innerHTML = `
+          <div class="glyph-symbol">${displayChar}</div>
+          <div class="glyph-code">${hexCode}</div>
+          ${g.mode === 'vector' ? '<div class="glyph-mode-tag" title="Vektör Modu"></div>' : ''}
+        `;
+        gridEl.appendChild(card);
+      });
+    }
+
+    function selectGlyph(key) {
+      currentKey = key;
+      const g = glyphs[key];
+      if (!g) return;
+
+      document.querySelectorAll(".char-card").forEach(c => c.classList.remove("active"));
+      renderCharGrid();
+
+      const displayChar = g.char || g.name;
+      document.getElementById("charBigPreview").textContent = displayChar;
+      document.getElementById("charNameDisplay").textContent = g.name || key;
+      const hexStr = g.unicode ? "U+" + g.unicode.toString(16).toUpperCase().padStart(4, "0") + " (" + g.unicode + ")" : "-";
+      document.getElementById("charUnicodeDisplay").textContent = "Unicode: " + hexStr;
+      
+      const catNames = {
+        "turkish_upper": "🇹🇷 Türkçe Büyük Harf",
+        "turkish_lower": "🇹🇷 Türkçe Küçük Harf",
+        "digit": "🔢 Rakam",
+        "symbol": "🔣 Sembol / Noktalama",
+        "currency": "💰 Para / Özel",
+        "whitespace": "Boşluk Karakteri"
+      };
+      document.getElementById("charCategoryDisplay").textContent = catNames[g.category] || "Karakter";
+
+      const adv = g.advance || 700;
+      document.getElementById("advanceSlider").value = adv;
+      document.getElementById("advanceValLabel").textContent = adv;
+
+      if (g.mode === "grid") setEditMode("grid", false);
+      else setEditMode("vector", false);
+
+      if (g.gridCols) {
+        gridResolution = g.gridCols;
+        document.getElementById("gridResSelect").value = gridResolution;
+      }
+
+      document.getElementById("canvasStatusText").textContent = `Karakter seçildi: ${g.char || g.name} (${hexStr})`;
+      drawCanvas();
+    }
+
+    function setEditMode(mode, updateGlyph = true) {
+      editMode = mode;
+      document.getElementById("modeVectorBtn").classList.toggle("active", mode === "vector");
+      document.getElementById("modeGridBtn").classList.toggle("active", mode === "grid");
+
+      document.getElementById("vectorTools").style.display = mode === "vector" ? "flex" : "none";
+      document.getElementById("gridTools").style.display = mode === "grid" ? "flex" : "none";
+
+      if (updateGlyph && glyphs[currentKey]) {
+        glyphs[currentKey].mode = mode;
+      }
+      drawCanvas();
+    }
+
+    function setVectorTool(tool) {
+      vectorTool = tool;
+      document.querySelectorAll("#vectorTools .tool-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.tool === tool);
+      });
+    }
+
+    function setGridTool(tool) {
+      gridTool = tool;
+      document.querySelectorAll("#gridTools .tool-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.gridtool === tool);
+      });
+    }
+
+    function updateBrushWidth(val) {
+      brushWidth = parseInt(val);
+      document.getElementById("brushWidthLabel").textContent = val;
+    }
+
+    function updateAdvanceWidth(val) {
+      val = parseInt(val);
+      if (glyphs[currentKey]) {
+        glyphs[currentKey].advance = val;
+      }
+      document.getElementById("advanceSlider").value = val;
+      document.getElementById("advanceValLabel").textContent = val;
+      drawCanvas();
+      updateLivePreview();
+    }
+
+    function fontToCanvas(fx, fy) {
+      const pad = CANVAS_SIZE * 0.12;
+      const h = CANVAS_SIZE - 2 * pad;
+      const cx = pad + (fx / UPM) * h;
+      const cy = CANVAS_SIZE - (pad + ((fy - DESCENDER) / (ASCENDER - DESCENDER)) * h);
+      return { x: cx, y: cy };
+    }
+
+    function canvasToFont(cx, cy) {
+      const pad = CANVAS_SIZE * 0.12;
+      const h = CANVAS_SIZE - 2 * pad;
+      const fx = ((cx - pad) / h) * UPM;
+      const fy = DESCENDER + ((CANVAS_SIZE - cy - pad) / h) * (ASCENDER - DESCENDER);
+      return { x: Math.round(fx), y: Math.round(fy) };
+    }
+
+    function drawCanvas() {
+      ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+      const g = glyphs[currentKey];
+      if (!g) return;
+
+      // 1. Draw Typography Guidelines
+      drawGuidelines(g.advance || 700);
+
+      // 2. Draw Transparent Background Ghost Guide Template (PURE REFERENCE LAYER)
+      if (showGhostGuide) {
+        const tplKey = g.name || currentKey;
+        const tplContours = ghostTemplates[tplKey] || ghostTemplates[currentKey];
+        if (tplContours) {
+          drawGhostGuide(tplContours);
+        }
+      }
+
+      // 3. Draw User's Actual Drawing on Top
+      if (editMode === "grid") {
+        drawPixelGrid(g);
+      } else {
+        drawVectorContent(g);
+      }
+    }
+
+    function drawGuidelines(advance) {
+      const lines = [
+        { y: ASCENDER, label: "Ascender (800)", color: "#3b82f6" },
+        { y: CAP_HEIGHT, label: "Cap Height (700)", color: "#8b5cf6" },
+        { y: X_HEIGHT, label: "x-Height (500)", color: "#6b7280" },
+        { y: BASELINE, label: "Baseline (0)", color: "#ef4444" },
+        { y: DESCENDER, label: "Descender (-200)", color: "#3b82f6" }
+      ];
+
+      ctx.save();
+      lines.forEach(l => {
+        const pt = fontToCanvas(0, l.y);
+        ctx.strokeStyle = l.color;
+        ctx.lineWidth = l.y === BASELINE ? 1.5 : 0.75;
+        ctx.setLineDash(l.y === BASELINE ? [] : [4, 4]);
+
+        ctx.beginPath();
+        ctx.moveTo(0, pt.y);
+        ctx.lineTo(CANVAS_SIZE, pt.y);
+        ctx.stroke();
+
+        ctx.fillStyle = l.color;
+        ctx.font = "9px system-ui";
+        ctx.fillText(l.label, 8, pt.y - 3);
+      });
+
+      const leftPt = fontToCanvas(0, 0);
+      const rightPt = fontToCanvas(advance, 0);
+
+      ctx.strokeStyle = "rgba(34, 197, 94, 0.4)";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([6, 6]);
+
+      ctx.beginPath();
+      ctx.moveTo(leftPt.x, 0);
+      ctx.lineTo(leftPt.x, CANVAS_SIZE);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(rightPt.x, 0);
+      ctx.lineTo(rightPt.x, CANVAS_SIZE);
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(34, 197, 94, 0.8)";
+      ctx.fillText("Advance: " + advance, rightPt.x + 4, CANVAS_SIZE - 12);
+      ctx.restore();
+    }
+
+    function drawGhostGuide(contours) {
+      if (!contours || contours.length === 0) return;
+      ctx.save();
+
+      ctx.strokeStyle = `rgba(148, 163, 184, ${ghostOpacity * 1.5})`;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.fillStyle = `rgba(59, 130, 246, ${ghostOpacity * 0.45})`;
+
+      ctx.beginPath();
+      contours.forEach(contour => {
+        contour.forEach((cmd, idx) => {
+          if (cmd.type === "M" || idx === 0) {
+            const p = fontToCanvas(cmd.x, cmd.y);
+            ctx.moveTo(p.x, p.y);
+          } else if (cmd.type === "L") {
+            const p = fontToCanvas(cmd.x, cmd.y);
+            ctx.lineTo(p.x, p.y);
+          } else if (cmd.type === "Q_ON" || cmd.type === "Q_CTRL") {
+            const p = fontToCanvas(cmd.x, cmd.y);
+            ctx.lineTo(p.x, p.y);
+          } else if (cmd.type === "Z") {
+            ctx.closePath();
+          }
+        });
+      });
+      ctx.fill("evenodd");
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawVectorContent(g) {
+      ctx.save();
+
+      // Draw user's recorded contours
+      if (g.contours && g.contours.length > 0) {
+        ctx.fillStyle = "#22c55e";
+        ctx.strokeStyle = "#4ade80";
+        ctx.lineWidth = 2;
+
+        ctx.beginPath();
+        g.contours.forEach(contour => {
+          contour.forEach((cmd, idx) => {
+            if (cmd.type === "M" || idx === 0) {
+              const p = fontToCanvas(cmd.x, cmd.y);
+              ctx.moveTo(p.x, p.y);
+            } else if (cmd.type === "L") {
+              const p = fontToCanvas(cmd.x, cmd.y);
+              ctx.lineTo(p.x, p.y);
+            } else if (cmd.type === "Q_ON" || cmd.type === "Q_CTRL") {
+              const p = fontToCanvas(cmd.x, cmd.y);
+              ctx.lineTo(p.x, p.y);
+            } else if (cmd.type === "Z") {
+              ctx.closePath();
+            }
+          });
+        });
+        ctx.fill("evenodd");
+        ctx.stroke();
+      }
+
+      // Draw user's freehand brush strokes
+      if (g.strokes && g.strokes.length > 0) {
+        g.strokes.forEach(stroke => {
+          if (!stroke.points || stroke.points.length < 2) return;
+          ctx.beginPath();
+          const start = fontToCanvas(stroke.points[0].x, stroke.points[0].y);
+          ctx.moveTo(start.x, start.y);
+
+          for (let i = 1; i < stroke.points.length; i++) {
+            const p = fontToCanvas(stroke.points[i].x, stroke.points[i].y);
+            ctx.lineTo(p.x, p.y);
+          }
+
+          const canvasWidth = (stroke.width / UPM) * (CANVAS_SIZE * 0.76);
+          ctx.strokeStyle = "#4ade80";
+          ctx.lineWidth = Math.max(2, canvasWidth);
+          ctx.lineCap = "round";
+          ctx.lineJoin = "round";
+          ctx.stroke();
+        });
+      }
+
+      ctx.restore();
+    }
+
+    function drawPixelGrid(g) {
+      const rows = g.gridRows || gridResolution;
+      const cols = g.gridCols || gridResolution;
+      const grid = g.grid || [];
+
+      const pad = CANVAS_SIZE * 0.12;
+      const artSize = CANVAS_SIZE - 2 * pad;
+      const cellW = artSize / cols;
+      const cellH = artSize / rows;
+
+      ctx.save();
+
+      ctx.strokeStyle = "#1f1f23";
+      ctx.lineWidth = 1;
+
+      for (let r = 0; r <= rows; r++) {
+        ctx.beginPath();
+        ctx.moveTo(pad, pad + r * cellH);
+        ctx.lineTo(pad + artSize, pad + r * cellH);
+        ctx.stroke();
+      }
+      for (let c = 0; c <= cols; c++) {
+        ctx.beginPath();
+        ctx.moveTo(pad + c * cellW, pad);
+        ctx.lineTo(pad + c * cellW, pad + artSize);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = "#22c55e";
+      for (let r = 0; r < rows; r++) {
+        const rowStr = grid[r] || "";
+        for (let c = 0; c < cols; c++) {
+          if (rowStr[c] === "#") {
+            ctx.fillRect(pad + c * cellW, pad + r * cellH, cellW, cellH);
+          }
+        }
+      }
+
+      ctx.restore();
+    }
+
+    function setupCanvasEvents() {
+      canvas.onmousedown = (e) => {
+        isDrawing = true;
+        saveUndoState();
+        const pos = getCanvasMousePos(e);
+        const fpos = canvasToFont(pos.x, pos.y);
+
+        if (editMode === "vector") {
+          currentStroke = {
+            points: [fpos],
+            width: brushWidth
+          };
+          if (!glyphs[currentKey].strokes) glyphs[currentKey].strokes = [];
+          glyphs[currentKey].strokes.push(currentStroke);
+        } else {
+          handleGridClick(pos.x, pos.y);
+        }
+        drawCanvas();
+      };
+
+      canvas.onmousemove = (e) => {
+        const pos = getCanvasMousePos(e);
+        const fpos = canvasToFont(pos.x, pos.y);
+        document.getElementById("canvasCoords").textContent = `X: ${fpos.x}, Y: ${fpos.y}`;
+
+        if (!isDrawing) return;
+
+        if (editMode === "vector") {
+          if (currentStroke) {
+            currentStroke.points.push(fpos);
+            drawCanvas();
+          }
+        } else {
+          handleGridClick(pos.x, pos.y);
+        }
+      };
+
+      window.onmouseup = () => {
+        if (isDrawing) {
+          isDrawing = false;
+          currentStroke = null;
+          updateLivePreview();
+        }
+      };
+    }
+
+    function getCanvasMousePos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY
+      };
+    }
+
+    function handleGridClick(cx, cy) {
+      const g = glyphs[currentKey];
+      if (!g) return;
+
+      const rows = g.gridRows || gridResolution;
+      const cols = g.gridCols || gridResolution;
+      const pad = CANVAS_SIZE * 0.12;
+      const artSize = CANVAS_SIZE - 2 * pad;
+
+      if (cx < pad || cx > pad + artSize || cy < pad || cy > pad + artSize) return;
+
+      const c = Math.floor(((cx - pad) / artSize) * cols);
+      const r = Math.floor(((cy - pad) / artSize) * rows);
+
+      if (r >= 0 && r < rows && c >= 0 && c < cols) {
+        if (!g.grid || g.grid.length !== rows) {
+          g.grid = Array(rows).fill(" ".repeat(cols));
+        }
+
+        const rowArr = g.grid[r].split("");
+        if (gridTool === "pen") rowArr[c] = "#";
+        else if (gridTool === "eraser") rowArr[c] = " ";
+        else if (gridTool === "bucket") {
+          floodFill(g.grid, r, c, rowArr[c] === "#" ? " " : "#");
+          drawCanvas();
+          return;
+        }
+
+        g.grid[r] = rowArr.join("");
+        g.mode = "grid";
+        drawCanvas();
+      }
+    }
+
+    function floodFill(grid, startR, startC, targetVal) {
+      const rows = grid.length;
+      const cols = grid[0].length;
+      const origVal = grid[startR][startC];
+      if (origVal === targetVal) return;
+
+      const queue = [[startR, startC]];
+      const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
+
+      while (queue.length > 0) {
+        const [r, c] = queue.pop();
+        if (r < 0 || r >= rows || c < 0 || c >= cols) continue;
+        if (visited[r][c]) continue;
+        visited[r][c] = true;
+
+        if (grid[r][c] === origVal) {
+          const rowArr = grid[r].split("");
+          rowArr[c] = targetVal;
+          grid[r] = rowArr.join("");
+
+          queue.push([r + 1, c], [r - 1, c], [r, c + 1], [r, c - 1]);
+        }
+      }
+    }
+
+    function changeGridResolution(newRes) {
+      newRes = parseInt(newRes);
+      gridResolution = newRes;
+      const g = glyphs[currentKey];
+      if (!g) return;
+
+      saveUndoState();
+
+      const oldRows = g.gridRows || 32;
+      const oldCols = g.gridCols || 32;
+      const oldGrid = g.grid || Array(oldRows).fill(" ".repeat(oldCols));
+
+      const newGrid = [];
+      for (let r = 0; r < newRes; r++) {
+        let rowStr = "";
+        const origR = Math.min(oldRows - 1, Math.floor((r / newRes) * oldRows));
+        for (let c = 0; c < newRes; c++) {
+          const origC = Math.min(oldCols - 1, Math.floor((c / newRes) * oldCols));
+          rowStr += oldGrid[origR] ? oldGrid[origR][origC] : " ";
+        }
+        newGrid.push(rowStr);
+      }
+
+      g.grid = newGrid;
+      g.gridRows = newRes;
+      g.gridCols = newRes;
+      g.mode = "grid";
+
+      drawCanvas();
+      updateLivePreview();
+    }
+
+    function shiftGrid(dx, dy) {
+      const g = glyphs[currentKey];
+      if (!g || !g.grid) return;
+      saveUndoState();
+
+      const rows = g.grid.length;
+      const cols = g.grid[0].length;
+      const newGrid = [];
+
+      for (let r = 0; r < rows; r++) {
+        let rowStr = "";
+        for (let c = 0; c < cols; c++) {
+          const srcR = r - dy;
+          const srcC = c - dx;
+          if (srcR >= 0 && srcR < rows && srcC >= 0 && srcC < cols) {
+            rowStr += g.grid[srcR][srcC];
+          } else {
+            rowStr += " ";
+          }
+        }
+        newGrid.push(rowStr);
+      }
+      g.grid = newGrid;
+      g.mode = "grid";
+      drawCanvas();
+      updateLivePreview();
+    }
+
+    function clearCanvasContent() {
+      const g = glyphs[currentKey];
+      if (!g) return;
+      saveUndoState();
+
+      g.contours = [];
+      g.strokes = [];
+      const rows = g.gridRows || gridResolution;
+      const cols = g.gridCols || gridResolution;
+      g.grid = Array(rows).fill(" ".repeat(cols));
+      
+      drawCanvas();
+      updateLivePreview();
+    }
+
+    function saveUndoState() {
+      const g = glyphs[currentKey];
+      if (!g) return;
+      undoStack.push({
+        key: currentKey,
+        data: JSON.parse(JSON.stringify(g))
+      });
+      if (undoStack.length > 30) undoStack.shift();
+    }
+
+    function undo() {
+      if (undoStack.length === 0) return;
+      const last = undoStack.pop();
+      glyphs[last.key] = last.data;
+      if (last.key === currentKey) {
+        selectGlyph(currentKey);
+      }
+      drawCanvas();
+      updateLivePreview();
+    }
+
+    function convertGridToVector() {
+      const g = glyphs[currentKey];
+      if (!g || !g.grid) return;
+      saveUndoState();
+
+      const rows = g.gridRows || gridResolution;
+      const cols = g.gridCols || gridResolution;
+      const cellW = Math.round(UPM / cols);
+      const cellH = Math.round(UPM / rows);
+
+      const contours = [];
+      for (let r = 0; r < rows; r++) {
+        const y = (rows - 1 - r) * cellH;
+        for (let c = 0; c < cols; c++) {
+          if (g.grid[r][c] === "#") {
+            const x = c * cellW;
+            contours.push([
+              { type: "M", x: x, y: y },
+              { type: "L", x: x, y: y + cellH },
+              { type: "L", x: x + cellW, y: y + cellH },
+              { type: "L", x: x + cellW, y: y },
+              { type: "Z" }
+            ]);
+          }
+        }
+      }
+
+      g.contours = contours;
+      g.mode = "vector";
+      setEditMode("vector");
+      alert(`✓ ${contours.length} adet katı vektör kutusu oluşturuldu!`);
+    }
+
+    function convertVectorToGrid() {
+      const g = glyphs[currentKey];
+      if (!g) return;
+      saveUndoState();
+
+      const offCanvas = document.createElement("canvas");
+      offCanvas.width = gridResolution;
+      offCanvas.height = gridResolution;
+      const offCtx = offCanvas.getContext("2d");
+
+      offCtx.fillStyle = "#000";
+      offCtx.fillRect(0, 0, gridResolution, gridResolution);
+      offCtx.fillStyle = "#fff";
+
+      if (g.contours) {
+        g.contours.forEach(cnt => {
+          offCtx.beginPath();
+          cnt.forEach(cmd => {
+            const x = Math.round((cmd.x / UPM) * gridResolution);
+            const y = Math.round(((800 - cmd.y) / (ASCENDER - DESCENDER)) * gridResolution);
+            if (cmd.type === "M") offCtx.moveTo(x, y);
+            else if (cmd.type === "L" || cmd.type === "Q_ON") offCtx.lineTo(x, y);
+            else if (cmd.type === "Z") offCtx.closePath();
+          });
+          offCtx.fill();
+        });
+      }
+
+      const imgData = offCtx.getImageData(0, 0, gridResolution, gridResolution).data;
+      const newGrid = [];
+
+      for (let r = 0; r < gridResolution; r++) {
+        let rowStr = "";
+        for (let c = 0; c < gridResolution; c++) {
+          const idx = (r * gridResolution + c) * 4;
+          rowStr += imgData[idx] > 120 ? "#" : " ";
+        }
+        newGrid.push(rowStr);
+      }
+
+      g.grid = newGrid;
+      g.gridRows = gridResolution;
+      g.gridCols = gridResolution;
+      g.mode = "grid";
+      setEditMode("grid");
+      alert(`✓ Vektör şekli ${gridResolution}×${gridResolution} dolu grid'e dönüştürüldü!`);
+    }
+
+    function setPreviewText(txt) {
+      document.getElementById("previewInput").value = txt;
+      updateLivePreview();
+    }
+
+    function updateFontSize(px) {
+      document.getElementById("fontSizeVal").textContent = px + "px";
+      document.getElementById("livePreviewOutput").style.fontSize = px + "px";
+    }
+
+    function updateLivePreview() {
+      const txt = document.getElementById("previewInput").value;
+      const outEl = document.getElementById("livePreviewOutput");
+      outEl.textContent = txt;
+    }
+
+    async function refreshPreviewFont() {
+      try {
+        const fontUrl = "/output/OpenPixelFont-Regular.ttf?t=" + Date.now();
+        const fontFace = new FontFace("OpenPixelFont", `url(${fontUrl})`);
+        await fontFace.load();
+        document.fonts.add(fontFace);
+        updateLivePreview();
+      } catch (err) {
+        console.warn("Font refresh notice:", err);
+      }
+    }
+
+    async function saveAllGlyphs(showAlert = true) {
+      try {
+        const res = await fetch("/api/glyphs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(glyphs)
+        });
+        const data = await res.json();
+        if (showAlert) alert(`✓ ${data.count} karakter başarıyla kaydedildi!`);
+      } catch (err) {
+        alert("Kaydetme hatası: " + err);
+      }
+    }
+
+    async function buildAndDownloadTtf() {
+      try {
+        document.getElementById("canvasStatusText").textContent = "TTF derleniyor, lütfen bekleyin...";
+        const res = await fetch("/api/build", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(glyphs)
+        });
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "Yavuz-El-Cizimi-Font.ttf";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        document.getElementById("canvasStatusText").textContent = "✓ TTF başarıyla indirildi!";
+        refreshPreviewFont();
+      } catch (err) {
+        alert("Derleme hatası: " + err);
+      }
+    }
+
+    function openAddGlyphModal() {
+      document.getElementById("addModal").style.display = "flex";
+      document.getElementById("newCharInput").value = "";
+      document.getElementById("newHexInput").value = "";
+      document.getElementById("newNameInput").value = "";
+    }
+    function closeAddGlyphModal() {
+      document.getElementById("addModal").style.display = "none";
+    }
+
+    function onNewCharInput(ch) {
+      if (!ch) return;
+      const code = ch.charCodeAt(0);
+      document.getElementById("newHexInput").value = code.toString(16).toUpperCase().padStart(4, "0");
+      document.getElementById("newNameInput").value = "uni" + code.toString(16).toUpperCase().padStart(4, "0");
+    }
+
+    function confirmAddGlyph() {
+      const ch = document.getElementById("newCharInput").value.trim();
+      const hex = document.getElementById("newHexInput").value.trim();
+      const name = document.getElementById("newNameInput").value.trim();
+
+      if (!hex || !name) {
+        alert("Lütfen Unicode veya Glyph adını girin.");
+        return;
+      }
+
+      const u = parseInt(hex, 16);
+      glyphs[name] = {
+        name: name,
+        char: ch || String.fromCharCode(u),
+        unicode: u,
+        advance: 700,
+        category: "symbol",
+        mode: "vector",
+        gridRows: 32,
+        gridCols: 32,
+        contours: [],
+        strokes: [],
+        grid: []
+      };
+
+      closeAddGlyphModal();
+      document.getElementById("glyphCountBadge").textContent = Object.keys(glyphs).length + " Karakter";
+      renderCharGrid();
+      selectGlyph(name);
+    }
+
+    window.onkeydown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        saveAllGlyphs();
+      } else if ((e.ctrlKey || e.metaKey) && e.key === "z") {
+        e.preventDefault();
+        undo();
+      }
+    };
+
+    init();
+  </script>
+</body>
+</html>

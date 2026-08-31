@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Custom Geometric Sans Önizleme</title>
+  <style>
+    :root { --bg: #0f0f11; --fg: #e8e8ec; --accent: #4ade80; --panel: #18181b; --border: #2d2d33; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--fg); line-height: 1.5; }
+    .container { max-width: 960px; margin: 0 auto; padding: 24px; }
+    h1 { margin: 0 0 8px; }
+    p.sub { margin: 0 0 24px; color: #9ca3af; }
+    .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+    label { display: block; font-size: 0.85rem; color: #9ca3af; margin-bottom: 6px; }
+    textarea { width: 100%; background: #0b0b0d; color: var(--fg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 1rem; resize: vertical; min-height: 120px; }
+    .controls { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
+    input[type="range"] { width: 200px; }
+    .preview-box { min-height: 200px; background: #0b0b0d; border: 1px dashed var(--border); border-radius: 8px; padding: 20px; word-break: break-word; font-family: 'CustomGeo', sans-serif; margin-top: 16px; }
+    .char-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 8px; }
+    .char-cell { background: #0b0b0d; border: 1px solid var(--border); border-radius: 8px; text-align: center; padding: 10px 4px; }
+    .char-cell .glyph { font-family: 'CustomGeo', sans-serif; font-size: 32px; line-height: 1; }
+    .char-cell .code { font-size: 0.6rem; color: #6b7280; margin-top: 4px; }
+    @font-face { font-family: 'CustomGeo'; src: url('../output/CustomGeometricSans-Regular.ttf') format('truetype'); font-display: swap; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Custom Geometric Sans</h1>
+    <p class="sub">Minimal geometrik sans-serif font — Türkçe karakterler dahil.</p>
+    <div class="panel">
+      <label for="sample">Kendi metnin</label>
+      <textarea id="sample" spellcheck="false">Pijamalı hasta yağız şoföre çabucak güvendi.
+İĞÇÖŞÜ ığçöşü
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+abcdefghijklmnopqrstuvwxyz
+0123456789</textarea>
+      <div class="controls">
+        <label for="size">Boyut (px)</label>
+        <input id="size" type="range" min="12" max="128" value="48">
+        <span id="sizeValue">48px</span>
+      </div>
+      <div id="preview" class="preview-box" style="font-size: 48px;"></div>
+    </div>
+    <div class="panel"><label>Karakter Seti</label><div id="grid" class="char-grid"></div></div>
+  </div>
+  <script>
+    const sample = document.getElementById('sample');
+    const preview = document.getElementById('preview');
+    const size = document.getElementById('size');
+    const sizeValue = document.getElementById('sizeValue');
+    const grid = document.getElementById('grid');
+    function esc(t) { return t.replace(/[<>"&]/g, c =>({'<':'&lt;','>':'&gt;','"':'&quot;','&':'&amp;'}[c])); }
+    function upd() { preview.innerHTML = esc(sample.value).replace(/
+/g, '<br>'); preview.style.fontSize = size.value+'px'; sizeValue.textContent = size.value+'px'; }
+    sample.addEventListener('input', upd);
+    size.addEventListener('input', upd);
+    const chars = " !,-./0123456789:?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÇÖÜçöüĞğİıŞş";
+    chars.split('').forEach(ch => { const d=document.createElement('div'); d.className='char-cell'; d.innerHTML=`<div class="glyph">${esc(ch)}</div><div class="code">U+${ch.codePointAt(0).toString(16).toUpperCase().padStart(4,'0')}</div>`; grid.appendChild(d); });
+    upd();
+  </script>
+</body>
+</html>

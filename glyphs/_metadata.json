@@ -1,0 +1,15 @@
+{
+  "familyName": "OpenPixelFont",
+  "styleName": "Regular",
+  "unitsPerEm": 1000,
+  "ascender": 800,
+  "descender": -200,
+  "capHeight": 700,
+  "xHeight": 500,
+  "cellWidth": 31,
+  "cellHeight": 31,
+  "gridCols": 32,
+  "gridRows": 32,
+  "defaultAdvance": 700,
+  "glyphCount": 113
+}
