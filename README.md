@@ -52,7 +52,7 @@ Kendi el yazınızı, piksel fontunuzu veya tipografik tasarımınızı kolayca 
 
 ```bash
 # Depoyu klonlayın
-git clone https://github.com/yavuz/openfont-studio.git
+git clone https://github.com/ahmetemrew/OpenFont-Studio.git
 cd openfont-studio
 
 # Python sanal ortamı oluşturun ve aktifleştirin
